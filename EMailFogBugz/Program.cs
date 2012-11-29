@@ -63,12 +63,13 @@ namespace EMailFogBugz
                                                                                                                               Correspondant = fbCase.Elements().Where(x => x.Name == "sCorrespondent").FirstOrDefault() == null ? "" : fbCase.Elements().Where(x => x.Name == "sCorrespondent").FirstOrDefault().Value
             };
         }
-        public async void ProcessResolvedIssues(Task<System.Collections.Generic.IEnumerable<EMailFogBugz.ResolvedIssueResponse>> resolvedIssues)
+        public async void ProcessResolvedIssues(Task<IEnumerable<EMailFogBugz.ResolvedIssueResponse>> resolvedIssues)
         {
-            foreach (var issue in await resolvedIssues)
+            foreach (var resolvedIssue in await resolvedIssues)
             {
-                Console.WriteLine("Sending e-mail to " + issue.Correspondant);
-                Console.WriteLine("With body " + issue.LatestText);
+                string result = RazorEngine.Razor.Parse("@Model.Title", resolvedIssue);
+
+
             }
         }
     }
