@@ -11,6 +11,7 @@ namespace EMailFogBugz
         public string Project { get; set; }
         public string Status { get; set; }
         public string CustomerEmail { get; set; }
+        public string PersonAssignedTo { get; set; }
         public DateTime Opened { get; set; }
         public DateTime Resolved { get; set; }
         public DateTime Closed { get; set; }
