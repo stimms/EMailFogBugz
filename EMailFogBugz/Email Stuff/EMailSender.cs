@@ -2,12 +2,18 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Mail;
+using System.Globalization;
+using log4net;
 
 namespace EMailFogBugz
 {
     public class EMailSender : IEMailSender
     {
         public ISmtpClient SmtpClient { get; set; }
+        public ITemplateLoader templateLoader { get; set; }
+        public IMailTemplateParser templateParser { get; set; }
+        public FileSystemTemplateLoader fileParser { get; set; }
+        
 
         public void SendEMailAsync(string subject, string body, params string[] destinations)
         {
@@ -19,7 +25,7 @@ namespace EMailFogBugz
         public void SendEMailAsync(MailMessage message)
         {
             var smtpClient = new SmtpClient();
-            SmtpClient.SendAsync(message,Guid.NewGuid()); 
+            smtpClient.SendAsync(message,Guid.NewGuid()); 
         }
 
         protected MailMessage CreateMessage(string subject, string body, IEnumerable<string> destinations)
@@ -30,6 +36,26 @@ namespace EMailFogBugz
             message.Body = body;
             message.IsBodyHtml = true;
             return message;
+        }
+        public string GetEmailBody(string templateName, FogBugzCase selectedCase)
+        {
+            string emailBody = null;
+            if (templateName == null)
+            {
+                throw new ArgumentNullException("templateName");
+            }
+            try
+            {
+                var parser = new FileSystemTemplateLoader();
+                string template = parser.LoadTemplate(templateName, null);
+                emailBody = templateParser.Parse(template, CultureInfo.InvariantCulture, selectedCase);
+                return emailBody;
+            }
+            catch (Exception exception)
+            {
+                emailBody = string.Format("Exception Encountered: {0}",exception.Message);
+            }
+            return emailBody;
         }
     }
 }

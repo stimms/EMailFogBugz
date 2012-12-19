@@ -10,6 +10,8 @@ namespace EMailFogBugz
     {
         public string LoadTemplate(string templateName, CultureInfo culture)
         {
+            if (culture == null)
+                culture = CultureInfo.InvariantCulture;
             return File.ReadAllText(Path.Combine("MailTemplates", culture.ToString(), templateName + ".cshtml"));
         }
     }

@@ -67,14 +67,17 @@
     <Compile Include="FogBugzCase.cs" />
     <Compile Include="Email Stuff\IEmailSender.cs" />
     <Compile Include="Email Stuff\ISmtpClient.cs" />
-    <Compile Include="Email Stuff\IssueResolved.cs" />
     <Compile Include="ITemplateLoader.cs" />
-    <Compile Include="ITemplateParser.cs" />
+    <Compile Include="IMailTemplateParser.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RazorMailTemplateParser.cs" />
-    <Compile Include="ResolvedIssueResponse.cs" />
-    <None Include="Email Stuff\ResolvedIssuesAwaitingClose.cshtml" />
+    <None Include="MailTemplates\ClosedCases.cshtml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="MailTemplates\ResolvedIssuesAwaitingClose.cshtml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <Compile Include="Email Stuff\SmtpClientAdaptor.cs" />
     <Compile Include="TokenResponse.cs" />
   </ItemGroup>

@@ -11,6 +11,8 @@ using System.Xml.Linq;
 using Autofac;
 using Autofac.Configuration;
 using log4net;
+using RazorEngine;
+using RazorEngine.Templating;
 
 namespace EMailFogBugz
 {
@@ -21,7 +23,7 @@ namespace EMailFogBugz
         private static IContainer _container;
         private static ILog _log;
 
-        public void Handle(IssueResolved message)
+        public void Handle(FogBugzCase message)
         {
             dynamic model = new ExpandoObject();
             //should use new System.Globalization.CultureInfo(AppSettings.Culture)
@@ -38,7 +40,7 @@ namespace EMailFogBugz
             Program p = new Program();
             var token = p.GetToken(args[0]);
 
-            //p.SetCurrentFilter(token);
+            p.SetCurrentFilter(token);
             //var resolvedIssues = p.GetResolvedIssues(token);
             //p.ProcessResolvedIssues(resolvedIssues);
             var cases = p.GetCases(token);
@@ -75,7 +77,7 @@ namespace EMailFogBugz
             client.GetAsync(String.Format("https://simplicity-wp.fogbugz.com/api.asp?token={0}&pgx=LF&ixFilter=9", tokenResponse.Result.Token)).Wait();
         }
 
-        private async Task<IEnumerable<ResolvedIssueResponse>> GetResolvedIssues(Task<TokenResponse> token)
+        private async Task<IEnumerable<FogBugzCase>> GetResolvedIssues(Task<TokenResponse> token)
         {
             HttpClient client = new HttpClient();
             string url = String.Format("https://simplicity-wp.fogbugz.com/api.asp?cmd=search&token={0}&cols=sTitle,sCorrespondent,sLatestTextSummary,sProject,sStatus,sCustomerEmail,fReplied,dtOpened,dtResolved,dtClosed,sCategory,sPriority", (await token).Token);
@@ -91,15 +93,15 @@ namespace EMailFogBugz
             return ParseCases(await result.Content.ReadAsStringAsync());
 
         }
-        private IEnumerable<ResolvedIssueResponse> ParseResolvedIssues(string resolvedIssuesXML)
+        private IEnumerable<FogBugzCase> ParseResolvedIssues(string resolvedIssuesXML)
         {
             XElement root = XElement.Parse(resolvedIssuesXML);
             return from fbCase in root.Elements().Where(x => x.Name == "cases").Elements()
-                   select new ResolvedIssueResponse
+                   select new FogBugzCase
                    {
                        Title = fbCase.Elements().Where(x => x.Name == "sTitle").First().Value,
-                       LatestText = fbCase.Elements().Where(x => x.Name == "sLatestTextSummary").First().Value,
-                       Correspondant = fbCase.Elements().Where(x => x.Name == "sCorrespondent").FirstOrDefault() == null ? "" : fbCase.Elements().Where(x => x.Name == "sCorrespondent").FirstOrDefault().Value
+                       LatestTextSummary = fbCase.Elements().Where(x => x.Name == "sLatestTextSummary").First().Value,
+                       Correspondent = fbCase.Elements().Where(x => x.Name == "sCorrespondent").FirstOrDefault() == null ? "" : fbCase.Elements().Where(x => x.Name == "sCorrespondent").FirstOrDefault().Value
                    };
         }
         private IEnumerable<FogBugzCase> ParseCases(string issuesXML)
@@ -149,14 +151,13 @@ namespace EMailFogBugz
                 email.Subject  = @"FogBugz Issues";
                 email.IsBodyHtml = true;
 
-                string result = RazorEngine.Razor.Parse("@Model.Title", selectedCase );
-                
-                IMailTemplateParser templateParser = new RazorMailTemplateParser();
-                //email.Body = templateParser.Parse("ResolvedIssuesAwaitingClosure.Title", null, selectedCase);
-
-                email.Body= result;
                 IEMailSender emailSender = new EMailSender();
-                emailSender.SendEMailAsync(email);
+                email.Body = emailSender.GetEmailBody("ResolvedIssuesAwaitingClose", selectedCase);
+                if (email.Body.Substring(0, 9) == "Exception")
+                    _log.Error(email.Body);
+                else
+                    emailSender.SendEMailAsync(email);
+
                 
             }
         }
@@ -173,7 +174,7 @@ namespace EMailFogBugz
             _log = LogManager.GetLogger("EMailFogBugz");
         }
 
-        public async void ProcessResolvedIssues(Task<IEnumerable<EMailFogBugz.ResolvedIssueResponse>> resolvedIssues)
+        public async void ProcessResolvedIssues(Task<IEnumerable<FogBugzCase>> resolvedIssues)
         {
             foreach (var resolvedIssue in await resolvedIssues)
             {

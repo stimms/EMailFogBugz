@@ -9,5 +9,6 @@ namespace EMailFogBugz
     {
         void SendEMailAsync(string subject, string body, params string[] destinations);
         void SendEMailAsync(MailMessage message);
+        string GetEmailBody(string templateName, FogBugzCase selectedCase);
     }
 }

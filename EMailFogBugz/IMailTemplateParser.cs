@@ -8,6 +8,6 @@ namespace EMailFogBugz
 {
     public interface IMailTemplateParser
     {
-        string Parse(string templateName, CultureInfo culture, ExpandoObject parameters);
+        string Parse(string templateName, CultureInfo culture, FogBugzCase parameters);
     }
 }
