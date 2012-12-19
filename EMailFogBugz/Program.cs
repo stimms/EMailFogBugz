@@ -22,9 +22,12 @@ namespace EMailFogBugz
             Program p = new Program();
             var token = p.GetToken(args[0]);
 
-            p.SetCurrentFilter(token);
-            var resolvedIssues = p.GetResolvedIssues(token);
-            p.ProcessResolvedIssues(resolvedIssues);
+            p.SetResolvedFilter(token);
+            var resolvedIssues = p.GetCases(token);
+            p.ProcessCases(resolvedIssues);
+            p.SetClosedFilter(token);
+            var closedCases = p.GetCases(token);
+            p.ProcessCases(closedCases);
             
             Console.WriteLine("done");
             Console.Read();
@@ -47,12 +50,17 @@ namespace EMailFogBugz
             Console.WriteLine(result.Token);
             return result;
         }
-        private void SetCurrentFilter(Task<TokenResponse> tokenResponse)
+        private void SetResolvedFilter(Task<TokenResponse> tokenResponse)
         {
             HttpClient client = new HttpClient();
             client.GetAsync(String.Format("https://simplicity-wp.fogbugz.com/api.asp?token={0}&cmd=setCurrentFilter&sFilter=10", tokenResponse.Result.Token)).Wait();
         }
-        private async Task<IEnumerable<FogBugzCase>> GetResolvedIssues(Task<TokenResponse> token)
+        private void SetClosedFilter(Task<TokenResponse> tokenResponse)
+        {
+            HttpClient client = new HttpClient();
+            client.GetAsync(String.Format("https://simplicity-wp.fogbugz.com/api.asp?token={0}&cmd=setCurrentFilter&sFilter=11", tokenResponse.Result.Token)).Wait();
+        }
+        private async Task<IEnumerable<FogBugzCase>> GetCases(Task<TokenResponse> token)
         {
             HttpClient client = new HttpClient();
             string url = String.Format("https://simplicity-wp.fogbugz.com/api.asp?cmd=search&token={0}&cols=ixBug,sTitle,sCorrespondent,sLatestTextSummary,sProject,sStatus,sCustomerEmail,fReplied,dtOpened,dtResolved,dtClosed,sCategory,sPriority", (await token).Token);
@@ -93,7 +101,7 @@ namespace EMailFogBugz
                 return DateTime.UtcNow;
             }
         }
-        public async void ProcessResolvedIssues(Task<IEnumerable<EMailFogBugz.FogBugzCase>> theseCases)
+        public async void ProcessCases(Task<IEnumerable<EMailFogBugz.FogBugzCase>> theseCases)
         {
             foreach (var selectedCase in await theseCases)
             {
