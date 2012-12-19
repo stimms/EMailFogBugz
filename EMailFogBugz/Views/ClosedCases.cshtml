@@ -1,0 +1,13 @@
+@{
+    _Layout = null;
+}
+<br />Regarding the @Model.Project Simplicity Project, you opened a @Model.Priority @Model.Category, titled <a href="https://simplicity-wp.fogbugz.com/default.asp?@Model.ID">@Model.Title</a> on @Model.Opened.Date.ToString("dd MMM yyyy") . 
+<br />This case was resolved on @Model.Resolved.Date.ToString("dd MMM yyyy").
+<br />It was marked <b>@Model.Status</b> as of  @Model.Closed.Date.ToString("dd MMM yyyy"). 
+<br />
+<br /><b>Please deploy the solution presented. </b>
+<br />
+<br />The last response added to FogBugz is: 
+<br /> @Model.LatestTextSummary
+
+ 
