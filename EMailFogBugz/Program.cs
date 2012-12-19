@@ -18,35 +18,20 @@ namespace EMailFogBugz
 {
     class Program
     {
-        protected IEMailSender mailSender = new EMailSender();
-        protected IMailTemplateParser templateParser = new RazorMailTemplateParser();
-        private static IContainer _container;
         private static ILog _log;
 
-        public void Handle(FogBugzCase message)
-        {
-            dynamic model = new ExpandoObject();
-            //should use new System.Globalization.CultureInfo(AppSettings.Culture)
-            mailSender.SendEMailAsync(templateParser.Parse("ResolvedIssueResponse.Title", CultureInfo.InvariantCulture, model),
-                                      templateParser.Parse("ResolvedIssueResponse", CultureInfo.InvariantCulture, model),
-                                      message.UserEMail);
-        }
-                       
         static void Main(string[] args)
         {
             CreateLogger();
             _log.Info("Logger Started");
-            
+
             Program p = new Program();
             var token = p.GetToken(args[0]);
 
             p.SetCurrentFilter(token);
-            //var resolvedIssues = p.GetResolvedIssues(token);
-            //p.ProcessResolvedIssues(resolvedIssues);
-            var cases = p.GetCases(token);
-            p.ProcessCases(cases);
-
-           
+            var resolvedIssues = p.GetResolvedIssues(token);
+            p.ProcessResolvedIssues(resolvedIssues);
+            
             Console.WriteLine("done");
             Console.Read();
         }
@@ -76,34 +61,14 @@ namespace EMailFogBugz
         private async Task<IEnumerable<FogBugzCase>> GetResolvedIssues(Task<TokenResponse> token)
         {
             HttpClient client = new HttpClient();
-            string url = String.Format("https://simplicity-wp.fogbugz.com/api.asp?cmd=search&token={0}&cols=sTitle,sCorrespondent,sLatestTextSummary,sProject,sStatus,sCustomerEmail,fReplied,dtOpened,dtResolved,dtClosed,sCategory,sPriority", (await token).Token);
-            var result = await client.GetAsync(url);
-            return ParseResolvedIssues(await result.Content.ReadAsStringAsync());
-
-        }
-        private async Task<IEnumerable<FogBugzCase>> GetCases(Task<TokenResponse> token)
-        {
-            HttpClient client = new HttpClient();
             string url = String.Format("https://simplicity-wp.fogbugz.com/api.asp?cmd=search&token={0}&cols=ixBug,sTitle,sCorrespondent,sLatestTextSummary,sProject,sStatus,sCustomerEmail,fReplied,dtOpened,dtResolved,dtClosed,sCategory,sPriority", (await token).Token);
             var result = await client.GetAsync(url);
-            return ParseCases(await result.Content.ReadAsStringAsync());
+            return ParseResolvedIssues(await result.Content.ReadAsStringAsync());
 
         }
         private IEnumerable<FogBugzCase> ParseResolvedIssues(string resolvedIssuesXML)
         {
             XElement root = XElement.Parse(resolvedIssuesXML);
-            return from fbCase in root.Elements().Where(x => x.Name == "cases").Elements()
-                   select new FogBugzCase
-                   {
-                       Title = fbCase.Elements().Where(x => x.Name == "sTitle").First().Value,
-                       LatestTextSummary = fbCase.Elements().Where(x => x.Name == "sLatestTextSummary").First().Value,
-                       Correspondent = fbCase.Elements().Where(x => x.Name == "sCorrespondent").FirstOrDefault() == null ? "" : fbCase.Elements().Where(x => x.Name == "sCorrespondent").FirstOrDefault().Value
-                   };
-        }
-        private IEnumerable<FogBugzCase> ParseCases(string issuesXML)
-        {
-            XElement root = XElement.Parse(issuesXML);
-            //&cols=sTitle,sCorrespondent,sLatestTextSummary,sProject,sStatus,sCustomerEmail,fReplied,dtOpened,dtResolved,dtClosed,sCategory,sPriority
             return from fbCase in root.Elements().Where(x => x.Name == "cases").Elements()
                    select new FogBugzCase
                    {
@@ -114,7 +79,7 @@ namespace EMailFogBugz
                        Project = fbCase.Elements().Where(x => x.Name == "sProject").First().Value,
                        Status = fbCase.Elements().Where(x => x.Name == "sStatus").First().Value,
                        CustomerEmail = fbCase.Elements().Where(x => x.Name == "sCustomerEmail").First().Value,
-                       Opened = ParseStringToDate (fbCase.Elements().Where(x => x.Name == "dtOpened").First().Value),
+                       Opened = ParseStringToDate(fbCase.Elements().Where(x => x.Name == "dtOpened").First().Value),
                        Resolved = ParseStringToDate(fbCase.Elements().Where(x => x.Name == "dtResolved").FirstOrDefault().Value),
                        Closed = ParseStringToDate(fbCase.Elements().Where(x => x.Name == "dtClosed").First().Value),
                        Category = fbCase.Elements().Where(x => x.Name == "sCategory").First().Value,
@@ -125,27 +90,27 @@ namespace EMailFogBugz
         {
             //FogBugz String format: 2012-10-03T14:58:07Z
             DateTime variant;
-            if (theDate != null && DateTime.TryParse(theDate, out variant ) == true)
+            if (theDate != null && DateTime.TryParse(theDate, out variant) == true)
             {
-                return DateTime.Parse(theDate,CultureInfo.InvariantCulture);
+                return DateTime.Parse(theDate, CultureInfo.InvariantCulture);
             }
             else
             {
                 return DateTime.UtcNow;
             }
         }
-
-        public async void ProcessCases(Task<IEnumerable<EMailFogBugz.FogBugzCase>> theseCases)
+        public async void ProcessResolvedIssues(Task<IEnumerable<EMailFogBugz.FogBugzCase>> theseCases)
         {
             foreach (var selectedCase in await theseCases)
             {
                 MailMessage email = new MailMessage();
-                email.To.Add("katrina.senger@worleyparsons.com");
-                //if (selectedCase.CustomerEmail != null && selectedCase.CustomerEmail != "")
-                //    email.To.Add(selectedCase.CustomerEmail);
-                //if (selectedCase.Correspondent != null && selectedCase.Correspondent != "")
-                //    email.To.Add(selectedCase.Correspondent);
-                email.Subject  = string.Format(@"FogBugz case {0} has been resolved.", selectedCase.ID);
+                //For testing - uncomment the following and comment out the following two if statements.
+                //email.To.Add("katrina.senger@worleyparsons.com");
+                if (selectedCase.CustomerEmail != null && selectedCase.CustomerEmail != "")
+                    email.To.Add(selectedCase.CustomerEmail);
+                if (selectedCase.Correspondent != null && selectedCase.Correspondent != "")
+                    email.To.Add(selectedCase.Correspondent);
+                email.Subject = string.Format(@"FogBugz case {0} has been resolved.", selectedCase.ID);
                 email.IsBodyHtml = true;
 
                 IEMailSender emailSender = new EMailSender();
@@ -155,38 +120,13 @@ namespace EMailFogBugz
                 else
                     emailSender.SendEMailAsync(email);
 
-                
+
             }
-        }
-        private static void CreateContainer()
-        {
-            var containerBuilder = new ContainerBuilder();
-            containerBuilder.RegisterModule(new ConfigurationSettingsReader("autofac"));
-            containerBuilder.RegisterInstance(_log).AsImplementedInterfaces();
-            _container = containerBuilder.Build();
         }
         private static void CreateLogger()
         {
             log4net.Config.XmlConfigurator.Configure();
             _log = LogManager.GetLogger("EMailFogBugz");
         }
-
-        public async void ProcessResolvedIssues(Task<IEnumerable<FogBugzCase>> resolvedIssues)
-        {
-            foreach (var resolvedIssue in await resolvedIssues)
-            {
-                string result = RazorEngine.Razor.Parse("@Model.Title", resolvedIssue);
-
-                MailMessage email = new MailMessage();
-                string[] destination = { "katrina.senger@worleyparsons.com" };
-                string Subject =  "FogBugz Issues";
-                string Body = result;
-                
-                IEMailSender emailSender = new EMailSender();
-                emailSender.SendEMailAsync(Subject,Body,destination);
-            }
-        }
-
-                
     }
 }
