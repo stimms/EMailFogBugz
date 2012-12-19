@@ -44,17 +44,16 @@ namespace EMailFogBugz
             {
                 throw new ArgumentNullException("templateName");
             }
-            try
-            {
+            //try
+            //{
                 var parser = new FileSystemTemplateLoader();
-                string template = parser.LoadTemplate(templateName, null);
-                emailBody = templateParser.Parse(template, CultureInfo.InvariantCulture, selectedCase);
-                return emailBody;
-            }
-            catch (Exception exception)
-            {
-                emailBody = string.Format("Exception Encountered: {0}",exception.Message);
-            }
+                emailBody = parser.LoadTemplate(templateName, null, selectedCase);
+                
+            //}
+            //catch (Exception exception)
+            //{
+            //    emailBody = string.Format("Exception Encountered: {0}",exception.Message);
+            //}
             return emailBody;
         }
     }

@@ -8,5 +8,6 @@ namespace EMailFogBugz
     public interface ITemplateLoader
     {
         string LoadTemplate(string templateName, CultureInfo culture);
+        string LoadTemplate(string templateName, CultureInfo culture, FogBugzCase cases);
     }
 }

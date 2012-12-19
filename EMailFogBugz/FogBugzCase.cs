@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+
 namespace EMailFogBugz
 {
     public class FogBugzCase
@@ -20,6 +21,7 @@ namespace EMailFogBugz
         public DateTime Closed { get; set; }
         public string Category { get; set; }
         public string Priority { get; set; }
+        public string ID { get; set; }
 
         public Guid UserID { get; set; }
         public string UserEMail { get; set; }

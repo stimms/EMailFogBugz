@@ -72,10 +72,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RazorMailTemplateParser.cs" />
-    <None Include="MailTemplates\ClosedCases.cshtml">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="MailTemplates\ResolvedIssuesAwaitingClose.cshtml">
+    <None Include="Views\ResolvedIssuesAwaitingClose.cshtml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <Compile Include="Email Stuff\SmtpClientAdaptor.cs" />

@@ -57,11 +57,10 @@ namespace EMailFogBugz
         private async Task<TokenResponse> GetToken(string password)
         {
             HttpClient client = new HttpClient();
+            //might benefit from parsing args to allow the user to set their username and password.
             var result = await client.GetAsync(String.Format("https://simplicity-wp.fogbugz.com/api.asp?cmd=logon&email=katrina.senger@worleyparsons.com&password={0}", password));
-            //var result = await client.GetAsync(String.Format("https://simplicity-wp.fogbugz.com/api.asp?cmd=logon&email=simon.timms@worleyparsons.com&password={0}", password));
             return await ParseToken(await result.Content.ReadAsStringAsync());
         }
-
         private async Task<TokenResponse> ParseToken(string tokenXml)
         {
             XElement element = XElement.Parse(tokenXml);
@@ -69,14 +68,11 @@ namespace EMailFogBugz
             Console.WriteLine(result.Token);
             return result;
         }
-
         private void SetCurrentFilter(Task<TokenResponse> tokenResponse)
         {
             HttpClient client = new HttpClient();
-            //client.GetAsync(String.Format("https://simplicity-wp.fogbugz.com/api.asp?token={0}&cmd=setCurrentFilter&sFilter=inbox", tokenResponse.Result.Token)).Wait();
-            client.GetAsync(String.Format("https://simplicity-wp.fogbugz.com/api.asp?token={0}&pgx=LF&ixFilter=9", tokenResponse.Result.Token)).Wait();
+            client.GetAsync(String.Format("https://simplicity-wp.fogbugz.com/api.asp?token={0}&cmd=setCurrentFilter&sFilter=10", tokenResponse.Result.Token)).Wait();
         }
-
         private async Task<IEnumerable<FogBugzCase>> GetResolvedIssues(Task<TokenResponse> token)
         {
             HttpClient client = new HttpClient();
@@ -88,7 +84,7 @@ namespace EMailFogBugz
         private async Task<IEnumerable<FogBugzCase>> GetCases(Task<TokenResponse> token)
         {
             HttpClient client = new HttpClient();
-            string url = String.Format("https://simplicity-wp.fogbugz.com/api.asp?cmd=search&token={0}&cols=sTitle,sCorrespondent,sLatestTextSummary,sProject,sStatus,sCustomerEmail,fReplied,dtOpened,dtResolved,dtClosed,sCategory,sPriority", (await token).Token);
+            string url = String.Format("https://simplicity-wp.fogbugz.com/api.asp?cmd=search&token={0}&cols=ixBug,sTitle,sCorrespondent,sLatestTextSummary,sProject,sStatus,sCustomerEmail,fReplied,dtOpened,dtResolved,dtClosed,sCategory,sPriority", (await token).Token);
             var result = await client.GetAsync(url);
             return ParseCases(await result.Content.ReadAsStringAsync());
 
@@ -111,6 +107,7 @@ namespace EMailFogBugz
             return from fbCase in root.Elements().Where(x => x.Name == "cases").Elements()
                    select new FogBugzCase
                    {
+                       ID = fbCase.Elements().Where(x => x.Name == "ixBug").First().Value.ToString(),
                        Title = fbCase.Elements().Where(x => x.Name == "sTitle").First().Value,
                        LatestTextSummary = fbCase.Elements().Where(x => x.Name == "sLatestTextSummary").First().Value,
                        Correspondent = fbCase.Elements().Where(x => x.Name == "sCorrespondent").FirstOrDefault() == null ? "" : fbCase.Elements().Where(x => x.Name == "sCorrespondent").FirstOrDefault().Value,
@@ -144,10 +141,10 @@ namespace EMailFogBugz
             {
                 MailMessage email = new MailMessage();
                 email.To.Add("katrina.senger@worleyparsons.com");
-                if (selectedCase.CustomerEmail != null && selectedCase.CustomerEmail != "")
-                    email.To.Add(selectedCase.CustomerEmail);
-                if (selectedCase.Correspondent != null && selectedCase.Correspondent != "")
-                    email.To.Add(selectedCase.Correspondent);
+                //if (selectedCase.CustomerEmail != null && selectedCase.CustomerEmail != "")
+                //    email.To.Add(selectedCase.CustomerEmail);
+                //if (selectedCase.Correspondent != null && selectedCase.Correspondent != "")
+                //    email.To.Add(selectedCase.Correspondent);
                 email.Subject  = @"FogBugz Issues";
                 email.IsBodyHtml = true;
 
