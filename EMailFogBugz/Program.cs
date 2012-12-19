@@ -104,12 +104,13 @@ namespace EMailFogBugz
             foreach (var selectedCase in await theseCases)
             {
                 MailMessage email = new MailMessage();
-                //For testing - uncomment the following and comment out the following two if statements.
-                //email.To.Add("katrina.senger@worleyparsons.com");
-                if (selectedCase.CustomerEmail != null && selectedCase.CustomerEmail != "")
-                    email.To.Add(selectedCase.CustomerEmail);
-                if (selectedCase.Correspondent != null && selectedCase.Correspondent != "")
-                    email.To.Add(selectedCase.Correspondent);
+                //For testing
+                email.To.Add("katrina.senger@worleyparsons.com");
+                //For Production
+                //if (selectedCase.CustomerEmail != null && selectedCase.CustomerEmail != "")
+                //    email.To.Add(selectedCase.CustomerEmail);
+                //if (selectedCase.Correspondent != null && selectedCase.Correspondent != "")
+                //    email.To.Add(selectedCase.Correspondent);
                 email.Subject = string.Format(@"FogBugz case {0} has been resolved.", selectedCase.ID);
                 email.IsBodyHtml = true;
 
