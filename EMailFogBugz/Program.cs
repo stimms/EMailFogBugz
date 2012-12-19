@@ -145,7 +145,7 @@ namespace EMailFogBugz
                 //    email.To.Add(selectedCase.CustomerEmail);
                 //if (selectedCase.Correspondent != null && selectedCase.Correspondent != "")
                 //    email.To.Add(selectedCase.Correspondent);
-                email.Subject  = @"FogBugz Issues";
+                email.Subject  = string.Format(@"FogBugz case {0} has been resolved.", selectedCase.ID);
                 email.IsBodyHtml = true;
 
                 IEMailSender emailSender = new EMailSender();
