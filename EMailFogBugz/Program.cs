@@ -20,14 +20,16 @@ namespace EMailFogBugz
             _log.Info("Logger Started");
 
             Program p = new Program();
-            var token = p.GetToken(args[0]);
-            Boolean sendToUsers = false;
+            string FogBugzEmail = ""; //set your FogBugz email here.
+            var token = p.GetToken(args[0], FogBugzEmail);
+            string sendToUsers = null; //Use this variable to send to just one user for testing instead of the users identified in the case. 
+             
 
             //get resolved cases
             p.SetResolvedFilter(token);
             var resolvedIssues = p.GetCases(token);
             p.ProcessCases(resolvedIssues, sendToUsers);
-            
+
             //get closed cases 
             p.SetClosedFilter(token);
             var closedCases = p.GetCases(token);
@@ -40,11 +42,11 @@ namespace EMailFogBugz
         {
             Console.Write("done.");
         }
-        private async Task<TokenResponse> GetToken(string password)
+        private async Task<TokenResponse> GetToken(string password, string FogBugzEmail)
         {
             HttpClient client = new HttpClient();
             //might benefit from parsing args to allow the user to set their username and password.
-            var result = await client.GetAsync(String.Format("https://simplicity-wp.fogbugz.com/api.asp?cmd=logon&email=katrina.senger@worleyparsons.com&password={0}", password));
+            var result = await client.GetAsync(String.Format("https://simplicity-wp.fogbugz.com/api.asp?cmd=logon&email={1}&password={0}", password, FogBugzEmail ));
             return await ParseToken(await result.Content.ReadAsStringAsync());
         }
         private async Task<TokenResponse> ParseToken(string tokenXml)
@@ -106,14 +108,13 @@ namespace EMailFogBugz
                 return DateTime.UtcNow;
             }
         }
-        public async void ProcessCases(Task<IEnumerable<EMailFogBugz.FogBugzCase>> theseCases, Boolean SendToUsers =true)
+        public async void ProcessCases(Task<IEnumerable<EMailFogBugz.FogBugzCase>> theseCases, string SendToUsers =  null)
         {
             foreach (var selectedCase in await theseCases)
             {
                 MailMessage email = new MailMessage();
-                //For testing
-                if (SendToUsers == false)
-                    email.To.Add("katrina.senger@worleyparsons.com");
+                if (SendToUsers != null)
+                    email.To.Add(SendToUsers);
                 else
                 {
                     if (selectedCase.CustomerEmail != null && selectedCase.CustomerEmail != "")
