@@ -18,10 +18,13 @@ namespace EMailFogBugz
         {
             CreateLogger();
             _log.Info("Logger Started");
+            if(args.Length > 2)
+                _log.Error("A user name and password is required");
 
             Program p = new Program();
-            string FogBugzEmail = ""; //set your FogBugz email here.
-            var token = p.GetToken(args[0], FogBugzEmail);
+            string fogBugzEmail = args[0] //set your FogBugz email here.
+            string fogBugzPassword = args[0] //set your FogBugz email here.
+            var token = p.GetToken(fogBugzEmail, fogBugzPassword);
             string sendToUsers = null; //Use this variable to send to just one user for testing instead of the users identified in the case. 
              
 
@@ -42,7 +45,7 @@ namespace EMailFogBugz
         {
             Console.Write("done.");
         }
-        private async Task<TokenResponse> GetToken(string password, string FogBugzEmail)
+        private async Task<TokenResponse> GetToken(string FogBugzEmail, string password)
         {
             HttpClient client = new HttpClient();
             //might benefit from parsing args to allow the user to set their username and password.
