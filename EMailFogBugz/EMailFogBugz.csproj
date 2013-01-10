@@ -67,11 +67,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CaseParser.cs" />
+    <Compile Include="CaseProcessor.cs" />
     <Compile Include="EMailSender.cs" />
     <Compile Include="FileSystemTemplateLoader.cs" />
     <Compile Include="FogBugzCase.cs" />
     <Compile Include="IEmailSender.cs" />
     <Compile Include="ISmtpClient.cs" />
+    <Compile Include="CaseRepository.cs" />
     <Compile Include="ITemplateLoader.cs" />
     <Compile Include="IMailTemplateParser.cs" />
     <Compile Include="Program.cs" />
